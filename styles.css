@@ -11,3 +11,12 @@ body {
 canvas {
   display: block;
 }
+
+h1 {
+  color: white;
+  position: absolute;
+  font-family:'Courier New', Courier, monospace;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 30px;
+}
