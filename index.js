@@ -6,18 +6,14 @@ let counter = 0;
 
 let angle = 0;
 const points = [
-  [[-100], [-100], [-100]],
-  [[100], [-100], [-100]],
-  [[100], [100], [-100]],
-  [[-100], [100], [-100]],
-  [[-100], [-100], [100]],
-  [[100], [-100], [100]],
-  [[100], [100], [100]],
-  [[-100], [100], [100]],
-];
-const projection_matrix = [
-  [1, 0, 0],
-  [0, 1, 0],
+  [-100, -100, -100],
+  [100, -100, -100],
+  [100, 100, -100],
+  [-100, 100, -100],
+  [-100, -100, 100],
+  [100, -100, 100],
+  [100, 100, 100],
+  [-100, 100, 100],
 ];
 
 function multiply_matrices(A, B) {
@@ -26,9 +22,7 @@ function multiply_matrices(A, B) {
   const A_cols_num = A[0].length;
   const B_rows_num = B.length;
   const B_cols_num = B[0].length;
-
   if (A_cols_num != B_rows_num) return;
-
   let result = [];
   for (let i = 0; i < A_rows_num; i++) {
     let row = [];
@@ -38,6 +32,22 @@ function multiply_matrices(A, B) {
       row.push(c);
     }
     result.push(row);
+  }
+  return result;
+}
+
+function multiply_matrix_vector(matrix, vec) {
+  // result = matrix * vec
+  const matrix_rows_num = matrix.length;
+  const matrix_cols_num = matrix[0].length;
+  if (matrix_cols_num != vec.length) return;
+  let result = [];
+  for (let i = 0; i < matrix_rows_num; i++) {
+    let c = 0;
+    for (let j = 0; j < matrix_cols_num; j++) {
+      c += matrix[i][j] * vec[j];
+    }
+    result.push(c);
   }
   return result;
 }
@@ -67,34 +77,26 @@ function update() {
       [0, 0, 1],
     ];
 
-    // rotate the points around the x-axis
-    const rotated_points = [];
+    let rotation_matrix = multiply_matrices(rotationX_matrix, rotationY_matrix);
+    rotation_matrix = multiply_matrices(rotation_matrix, rotationZ_matrix);
+
+    let rotated_points = [];
     for (const point of points) {
-      let rotated_point = multiply_matrices(rotationX_matrix, point);
-      rotated_point = multiply_matrices(rotationY_matrix, rotated_point);
-      rotated_point = multiply_matrices(rotationZ_matrix, rotated_point);
+      // rotate the point
+      let rotated_point = multiply_matrix_vector(rotation_matrix, point);
       rotated_points.push(rotated_point);
-    }
-
-    // project the points into the xy plane
-    const projected_points = [];
-    for (const point of rotated_points) {
-      projected_points.push(multiply_matrices(projection_matrix, point));
-    }
-
-    // draw the points
-    for (const point of projected_points) {
+      // draw the point
       context.beginPath();
       context.fillStyle = "white";
-      context.arc(point[0], point[1], 10, 0, 2 * Math.PI);
+      context.arc(rotated_point[0], rotated_point[1], 10, 0, 2 * Math.PI);
       context.fill();
     }
 
     // connect the points
     for (let i = 0; i < 4; i++) {
-      connect(i, (i + 1) % 4, projected_points);
-      connect(i + 4, ((i + 1) % 4) + 4, projected_points);
-      connect(i, i + 4, projected_points);
+      connect(i, (i + 1) % 4, rotated_points);
+      connect(i + 4, ((i + 1) % 4) + 4, rotated_points);
+      connect(i, i + 4, rotated_points);
     }
 
     counter = 0;
